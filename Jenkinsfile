@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     environment {
-        VERSION = 'v1'
-        IMAGE_NAME = 'library-management-system'
-        DEPLOYMENT_NAME = 'library-v1'
-        SERVICE_NAME = 'library-v1-service'
-        NODE_PORT = '30001'
-    }
+    VERSION = 'v1'
+    DOCKERHUB_USERNAME = 'sahanalakshmi18'
+    IMAGE_NAME = 'library-management-system'
+    DEPLOYMENT_NAME = 'library-v1'
+    SERVICE_NAME = 'library-v1-service'
+    NODE_PORT = '30001'
+}
 
     stages {
         stage('Checkout') {
