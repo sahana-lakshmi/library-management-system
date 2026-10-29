@@ -13,11 +13,11 @@ HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Management System - V2</title>
+    <title>Library Management System - V3</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 35px auto;
             padding: 20px;
             background: #f4f7fb;
@@ -28,18 +28,21 @@ HTML = """
             margin: 20px 0;
             border-radius: 10px;
         }
-        input, select, button {
+        input, button {
             padding: 10px;
             margin: 6px 0;
         }
-        input, select {
-            width: 95%;
+        input {
+            width: 90%;
         }
         button {
             background: #2457a7;
             color: white;
             border: none;
             cursor: pointer;
+        }
+        .return-button {
+            background: #16804a;
         }
         table {
             width: 100%;
@@ -60,8 +63,8 @@ HTML = """
     </style>
 </head>
 <body>
-    <h1>Library Management System - V2</h1>
-    <p>Manage books and issue them to students.</p>
+    <h1>Library Management System - V3</h1>
+    <p>Manage books, issue books to students, and process returns.</p>
 
     {% if message %}
         <p class="message">{{ message }}</p>
@@ -131,13 +134,27 @@ HTML = """
                 <th>Book</th>
                 <th>Student</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
             {% for item in issued_books %}
             <tr>
                 <td>{{ item.id }}</td>
                 <td>{{ item.title }}</td>
                 <td>{{ item.student }}</td>
-                <td>Issued</td>
+                <td>{{ item.status|capitalize }}</td>
+                <td>
+                    {% if item.status == "issued" %}
+                    <form method="POST" action="/return">
+                        <input type="hidden" name="issue_id"
+                               value="{{ item.id }}">
+                        <button class="return-button" type="submit">
+                            Return Book
+                        </button>
+                    </form>
+                    {% else %}
+                    Returned
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>
@@ -229,9 +246,41 @@ def issue_book():
     return redirect(url_for("home"))
 
 
+@app.route("/return", methods=["POST"])
+def return_book():
+    try:
+        issue_id = int(request.form.get("issue_id", "0"))
+    except ValueError:
+        return "Invalid issue ID.", 400
+
+    record = next(
+        (item for item in issued_books if item["id"] == issue_id),
+        None
+    )
+
+    if record is None:
+        return "Issue record not found.", 404
+
+    if record["status"] == "returned":
+        return "This book has already been returned.", 400
+
+    book = next(
+        (item for item in books if item["id"] == record["book_id"]),
+        None
+    )
+
+    if book is None:
+        return "Associated book not found.", 404
+
+    book["copies"] += 1
+    record["status"] = "returned"
+
+    return redirect(url_for("home"))
+
+
 @app.get("/health")
 def health():
-    return {"status": "healthy", "version": "v2"}, 200
+    return {"status": "healthy", "version": "v3"}, 200
 
 
 if __name__ == "__main__":
